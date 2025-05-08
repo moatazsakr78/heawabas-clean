@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getCurrentUserProfile, updateUserProfile, UserProfile } from '@/lib/auth';
 import OrdersList from '@/components/ui/OrdersList';
 
-export default function Profile() {
+// Create a separate component that uses useSearchParams
+function ProfileContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -222,5 +223,25 @@ export default function Profile() {
         )}
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function ProfileLoading() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-6">
+      <div className="text-center">
+        <p className="text-lg">جاري تحميل البيانات...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function Profile() {
+  return (
+    <Suspense fallback={<ProfileLoading />}>
+      <ProfileContent />
+    </Suspense>
   );
 } 
