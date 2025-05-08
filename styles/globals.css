@@ -1,0 +1,462 @@
+/* Estilos para el componente de calendario */
+@import 'react-day-picker/dist/style.css';
+
+/* تخصيص أنماط التقويم للوضع العربي والهاتف */
+.rdp {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.rdp-button {
+  font-size: 0.85rem !important;
+}
+
+.rdp-month {
+  max-width: 100% !important;
+}
+
+.rdp-table {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.rdp-cell {
+  padding: 0 !important;
+}
+
+/* تعديلات المظهر العام */
+.rdp-day_selected, 
+.rdp-day_selected:focus-visible, 
+.rdp-day_selected:hover {
+  background-color: #5D1F1F !important;
+  color: white !important;
+}
+
+/* تعديل موضع شريط التمرير ليكون على الجانب الأيسر من الصفحة */
+html {
+  direction: rtl;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* تحديد موضع شريط التمرير للمتصفحات المختلفة */
+* {
+  scrollbar-width: thin; /* لـ Firefox */
+  scrollbar-color: rgba(93, 31, 31, 0.5) rgba(0, 0, 0, 0.1);
+  scrollbar-gutter: stable left; /* لضمان ظهور شريط التمرير على اليسار */
+}
+
+/* وضع شريط التمرير على اليسار للجميع */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* أنماط شريط التمرير لمتصفحات WebKit (كروم وسفاري) مع الوضع على اليسار */
+.custom-date-scrollbar {
+  /* إظهار شريط التمرير دائمًا على اليسار */
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: ltr; /* لوضع التمرير على اليسار */
+}
+
+.custom-date-scrollbar > * {
+  direction: rtl; /* لإعادة المحتوى للاتجاه الصحيح */
+}
+
+.custom-date-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 0;
+}
+
+.custom-date-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.custom-date-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(93, 31, 31, 0.5);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-date-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(93, 31, 31, 0.7);
+}
+
+/* شريط التمرير للكل */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(93, 31, 31, 0.5);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(93, 31, 31, 0.7);
+}
+
+/* تثبيت أزرار التطبيق في الأسفل */
+.custom-date-scrollbar .sticky {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 100%;
+}
+
+/* للتأكد من عدم تغطية المحتوى بأزرار التطبيق */
+.custom-date-scrollbar .pb-14 {
+  padding-bottom: 3.5rem !important;
+}
+
+/* تحسين عرض التقويم على الأجهزة المحمولة */
+@media (max-width: 640px) {
+  .rdp-month {
+    width: 100% !important;
+  }
+  
+  .rdp-caption {
+    font-size: 0.9rem !important;
+  }
+  
+  .rdp-head_cell, 
+  .rdp-day {
+    font-size: 0.8rem !important;
+    padding: 0 !important;
+  }
+  
+  /* تعديل منطقة التمرير للهاتف */
+  .custom-date-scrollbar {
+    max-height: 70vh !important;
+  }
+  
+  /* تقليص حجم التقويم على الهاتف */
+  .rdp-table {
+    font-size: 0.75rem;
+  }
+  
+  .rdp-button {
+    padding: 0 !important;
+    max-width: 30px;
+    max-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* تحسين رؤية أزرار التنقل في التقويم */
+.rdp-nav_button {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* تثبيت أزرار التطبيق لتكون دائماً مرئية */
+.sticky-buttons {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  z-index: 50;
+  padding: 10px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* تعديلات للشريط التمرير الرئيسي */
+.custom-scrollbar {
+  overflow-y: auto;
+  overflow-x: hidden;
+  direction: ltr !important; /* لوضع التمرير على اليسار */
+}
+
+.custom-scrollbar > * {
+  direction: rtl !important; /* لإعادة المحتوى للاتجاه الصحيح */
+}
+
+/* أنماط للصفحات المستقلة بدون شريط جانبي أو footer */
+body.standalone-page {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  background-color: white;
+}
+
+/* إخفاء الشريط الجانبي والمحتوى الزائد في الصفحة المستقلة */
+body.standalone-page main > div:not(.standalone-page-content) {
+  display: none;
+}
+
+/* تعديل أنماط صفحات Standalone */
+body, html {
+  margin: 0;
+  padding: 0;
+}
+
+/* حاوية أساسية للصفحات المستقلة */
+.standalone-container {
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  background-color: white;
+  position: relative;
+  margin: 0 auto;
+  direction: rtl;
+}
+
+.standalone-page-content {
+  max-width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: white;
+}
+
+/* تطبيق أنماط شريط تمرير مخصص على الصفحات المستقلة */
+.standalone-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 31, 31, 0.5) rgba(0, 0, 0, 0.1);
+}
+
+.standalone-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 0;
+}
+
+.standalone-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.standalone-container::-webkit-scrollbar-thumb {
+  background-color: rgba(93, 31, 31, 0.5);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.standalone-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(93, 31, 31, 0.7);
+}
+
+@media (min-width: 1024px) {
+  .standalone-container {
+    padding: 1.5rem;
+    max-width: 1200px;
+  }
+}
+
+/* أنماط وضع الصفحة الكاملة - تمنع ظهور أي عناصر من الصفحة الأصلية */
+html.full-page-root {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+.full-page-mode {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  background-color: white !important;
+  overflow: hidden !important;
+}
+
+/* قواعد مخصصة لإخفاء أي شريط جانبي معروف في التطبيق */
+.full-page-mode .sidebar-container,
+.full-page-mode .dashboard-sidebar,
+.full-page-mode .admin-sidebar,
+.full-page-mode .main-sidebar,
+.full-page-mode .admin-menu,
+.full-page-mode .control-panel,
+.full-page-mode div[class*="sidebar"],
+.full-page-mode div[class*="Sidebar"],
+.full-page-mode aside,
+.full-page-mode header,
+.full-page-mode footer,
+.full-page-mode nav,
+.full-page-mode > *:not(.full-page-container) {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+}
+
+/* تطبيق مباشر لتصميم الصفحة الكاملة */
+.full-page-mode {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+}
+
+/* منع النمط الافتراضي للجسم من التطبيق على وضع الصفحة الكاملة */
+.full-page-mode:not(.bg-\[\#c5c5c5\]) {
+  background-color: white !important;
+}
+
+/* حاوية الصفحة الكاملة تأخذ عرض الشاشة كاملاً */
+.full-page-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-y: auto !important;
+  background-color: white !important;
+  position: relative !important;
+}
+
+.full-page-container > div {
+  padding: 1rem;
+}
+
+/* تحديد موضع شريط التمرير ليكون على اليسار في الصفحة الكاملة */
+.full-page-container {
+  direction: ltr;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 31, 31, 0.5) rgba(0, 0, 0, 0.1);
+}
+
+.full-page-container > * {
+  direction: rtl;
+}
+
+.full-page-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 0;
+}
+
+.full-page-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.full-page-container::-webkit-scrollbar-thumb {
+  background-color: rgba(93, 31, 31, 0.5);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.full-page-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(93, 31, 31, 0.7);
+}
+
+@media (min-width: 1024px) {
+  .full-page-container {
+    max-width: 100vw;
+    padding: 1.5rem;
+  }
+}
+
+/* أنماط خاصة بالمحادثات والمساحة الآمنة للهواتف */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: env(safe-area-inset-bottom);
+    background-color: white;
+  }
+}
+
+/* تعديلات خاصة بنافذة المحادثة للهواتف */
+@media (max-width: 480px) {
+  /* رفع حقل الإدخال على هواتف الآيفون */
+  .chat-input-wrapper {
+    padding-bottom: 10px;
+    margin-bottom: env(safe-area-inset-bottom, 0);
+    background-color: white;
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+  }
+  
+  /* تعديل حجم نافذة المحادثة على الهواتف */
+  .chat-window {
+    height: 95vh !important;
+    max-height: 95vh !important;
+    border-radius: 8px 8px 0 0 !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* منع تداخل لوحة المفاتيح مع حقل الإدخال */
+  .chat-messages-container {
+    max-height: calc(95vh - 130px) !important;
+    padding-bottom: 20px !important;
+  }
+  
+  /* تحسين المظهر على شاشات الهواتف الصغيرة */
+  .chat-message-text {
+    font-size: 14px !important;
+  }
+  
+  .chat-message-time {
+    font-size: 10px !important;
+  }
+  
+  /* تعديل موضع الزر العائم */
+  .chat-floating-button {
+    bottom: 70px !important;
+  }
+  
+  /* تعديل حجم حقل الإدخال */
+  .chat-input {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+  
+  /* تعديل زر الإرسال */
+  .chat-send-button {
+    min-width: 40px !important;
+    padding: 10px !important;
+  }
+}
+
+/* دعم هواتف آيفون X+ مع الحافة السفلية */
+@media (max-width: 480px) and (min-height: 800px) {
+  .chat-input-wrapper {
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+  }
+  
+  .safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+/* Resto de los estilos globales */ 

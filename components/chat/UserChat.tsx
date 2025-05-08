@@ -11,7 +11,7 @@ import {
   Message,
   Conversation
 } from '@/lib/chat';
-import { FiSend, FiMessageCircle } from 'react-icons/fi';
+import { FiSend } from 'react-icons/fi';
 
 export default function UserChat({ showChat, onToggleChat }: { showChat: boolean, onToggleChat: () => void }) {
   const { user } = useAuth();
@@ -176,24 +176,28 @@ export default function UserChat({ showChat, onToggleChat }: { showChat: boolean
     <>
       {/* نافذة المحادثة */}
       {showChat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col h-[80vh] max-h-[600px] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-gray-900 bg-opacity-50 p-0 md:p-2">
+          <div className="bg-white rounded-t-lg md:rounded-lg shadow-xl w-full max-w-lg flex flex-col chat-window h-[85vh] max-h-[650px] overflow-hidden">
             {/* رأس المحادثة ثابت */}
-            <div className="bg-[#5D1F1F] text-white p-4 flex justify-between items-center sticky top-0 z-10">
+            <div className="bg-[#5D1F1F] text-white p-3 flex justify-between items-center sticky top-0 z-10">
               <h2 className="text-lg font-semibold">محادثة مع الدعم الفني</h2>
               <button
                 onClick={onToggleChat}
-                className="text-white hover:text-gray-200"
+                className="text-white hover:text-gray-200 text-2xl font-bold p-1"
                 aria-label="إغلاق المحادثة"
               >
                 &times;
               </button>
             </div>
-            {/* الرسائل */}
+            
+            {/* الرسائل - تقليل ارتفاعها لإفساح مجال لحقل الإدخال */}
             <div 
               ref={messagesContainerRef}
-              className="flex-1 flex flex-col overflow-y-auto bg-gray-50 px-4 py-2 gap-2" 
-              style={{scrollbarGutter:'stable'}}
+              className="flex-1 flex flex-col overflow-y-auto bg-gray-50 px-3 py-2 gap-2 chat-messages-container" 
+              style={{
+                scrollbarGutter: 'stable',
+                maxHeight: 'calc(100% - 130px)'
+              }}
             >
               {loading ? (
                 <div className="flex justify-center items-center h-full">
@@ -215,43 +219,49 @@ export default function UserChat({ showChat, onToggleChat }: { showChat: boolean
                     return (
                       <React.Fragment key={message.id}>
                         {showDate && (
-                          <div className="text-center my-2">
+                          <div className="text-center my-1">
                             <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                               {formatDate(message.created_at)}
                             </span>
                           </div>
                         )}
                         <div className={`mb-2 flex ${message.is_from_admin ? 'justify-start' : 'justify-end'}`} >
-                          <div className={`p-3 rounded-2xl max-w-[80%] break-words shadow ${message.is_from_admin ? 'bg-white border border-gray-200 text-gray-800' : 'bg-[#5D1F1F] text-white'}`} >
-                            <p>{message.content}</p>
-                            <span className={`text-xs block text-left mt-1 ${message.is_from_admin ? 'text-gray-500' : 'text-gray-200'}`}>{formatTime(message.created_at)}</span>
+                          <div className={`p-2.5 rounded-2xl max-w-[80%] break-words shadow ${message.is_from_admin ? 'bg-white border border-gray-200 text-gray-800' : 'bg-[#5D1F1F] text-white'}`} >
+                            <p className="text-sm md:text-base chat-message-text">{message.content}</p>
+                            <span className={`text-xs block text-left mt-1 chat-message-time ${message.is_from_admin ? 'text-gray-500' : 'text-gray-200'}`}>{formatTime(message.created_at)}</span>
                           </div>
                         </div>
                       </React.Fragment>
                     );
                   })}
-                  <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} className="h-16" />
                 </>
               )}
             </div>
-            {/* شريط الإدخال ثابت في الأسفل */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t flex bg-white sticky bottom-0 z-10">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="اكتب رسالتك هنا..."
-                className="flex-1 p-2 border rounded-l-2xl focus:outline-none focus:ring-2 focus:ring-[#5D1F1F] focus:border-transparent"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-[#5D1F1F] text-white p-2 rounded-r-2xl hover:bg-[#4a1919] transition-colors"
-                disabled={!newMessage.trim()}
-              >
-                <FiSend />
-              </button>
-            </form>
+            
+            {/* حاوية حقل الإدخال - مرفوعة قليلاً لتناسب هواتف الآيفون */}
+            <div className="chat-input-wrapper bg-white">
+              <form onSubmit={handleSendMessage} className="p-2 md:p-3 flex">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="اكتب رسالتك هنا..."
+                  className="flex-1 p-2 md:p-3 border rounded-l-2xl focus:outline-none focus:ring-2 focus:ring-[#5D1F1F] focus:border-transparent chat-input"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="bg-[#5D1F1F] text-white p-2 md:p-3 rounded-r-2xl hover:bg-[#4a1919] transition-colors flex items-center justify-center chat-send-button"
+                  disabled={!newMessage.trim()}
+                  style={{ minWidth: '45px' }}
+                >
+                  <FiSend size={18} />
+                </button>
+              </form>
+              {/* إضافة منطقة آمنة للهواتف الحديثة */}
+              <div className="safe-area-inset-bottom"></div>
+            </div>
           </div>
         </div>
       )}

@@ -61,6 +61,7 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
   const [editedItems, setEditedItems] = useState<{ [key: string]: OrderItem[] }>({});
   const [editedNotes, setEditedNotes] = useState<{ [key: string]: string }>({});
   const [savingOrder, setSavingOrder] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   // تحميل بيانات الطلب
   useEffect(() => {
@@ -210,7 +211,7 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
 
   // إكمال الطلب
   const handleCompleteOrder = async () => {
-    if (!order) return;
+    if (!order || navigating) return;
     
     // التحقق من أن جميع العناصر تم تحضيرها
     const allItemsPrepared = order.items.every(item => item.is_prepared);
@@ -241,10 +242,26 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
       }
       
       alert('تم إكمال الطلب بنجاح!');
-      router.push('/admin/customer-orders');
+      
+      // تعيين حالة الانتقال
+      setNavigating(true);
+      
+      try {
+        // إضافة علامة في localStorage للإشارة إلى أن الانتقال جاري
+        localStorage.setItem('prepare_order_redirecting', 'true');
+      } catch (error) {
+        console.error('Error setting localStorage item:', error);
+      }
+      
+      // استخدام setTimeout لضمان ظهور رسالة النجاح قبل الانتقال
+      setTimeout(() => {
+        window.location.replace('/admin/customer-orders');
+      }, 100);
+      
     } catch (error) {
       console.error('Error completing order:', error);
       alert('حدث خطأ غير متوقع أثناء إكمال الطلب');
+      setNavigating(false);
     } finally {
       setCompletingOrder(false);
     }
@@ -408,9 +425,49 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
     }
   };
 
+  // تحسين عملية الانتقال وتجنب الشاشة البيضاء
+  useEffect(() => {
+    const preventUnload = (e: BeforeUnloadEvent) => {
+      if (navigating) {
+        delete e.returnValue;
+        return;
+      }
+    };
+
+    // إضافة مستمع لمنع إعادة التحميل غير المقصودة
+    window.addEventListener('beforeunload', preventUnload);
+
+    // إزالة المستمع عند تفكيك المكون
+    return () => {
+      window.removeEventListener('beforeunload', preventUnload);
+    };
+  }, [navigating]);
+
   // العودة إلى صفحة طلبات العملاء
-  const handleGoBack = async () => {
-    router.push('/admin/customer-orders');
+  const handleGoBack = () => {
+    if (navigating) return;
+    
+    // تعيين حالة الانتقال لمنع النقرات المتعددة
+    setNavigating(true);
+    
+    try {
+      // إضافة علامة في localStorage للإشارة إلى أن الانتقال جاري
+      localStorage.setItem('prepare_order_redirecting', 'true');
+    } catch (error) {
+      console.error('Error setting localStorage item:', error);
+    }
+    
+    // عرض التحميل لفترة قصيرة للتأكد من تحديث حالة واجهة المستخدم
+    setTimeout(() => {
+      try {
+        // استخدام window.location.replace بدلاً من href للانتقال مع استبدال التاريخ
+        window.location.replace('/admin/customer-orders');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // محاولة احتياطية
+        window.location.href = '/admin/customer-orders';
+      }
+    }, 100);
   };
 
   // تعديل الطلب
@@ -432,7 +489,7 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-4">
         <div className="animate-pulse flex flex-col gap-4">
           <div className="h-10 bg-gray-200 rounded w-1/3"></div>
           <div className="h-40 bg-gray-200 rounded"></div>
@@ -445,7 +502,7 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
 
   if (error || !order) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-4">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <p>{error || 'لم يتم العثور على الطلب'}</p>
           <Button onClick={handleGoBack} className="mt-4">
@@ -463,17 +520,48 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
   const preparationProgress = Math.round((preparedItemsCount / totalItemsCount) * 100);
 
   return (
-    <div className="container mx-auto p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
         <Button 
           variant="outline" 
           onClick={handleGoBack}
           className="flex items-center gap-2"
+          disabled={navigating}
         >
-          <FiArrowRight />
-          العودة إلى قائمة الطلبات
+          {navigating ? (
+            <>
+              <span className="animate-spin h-4 w-4 mr-2 border-2 border-gray-500 rounded-full border-t-transparent"></span>
+              جاري الانتقال...
+            </>
+          ) : (
+            <>
+              <FiArrowRight />
+              العودة إلى قائمة الطلبات
+            </>
+          )}
         </Button>
         <h1 className="text-2xl font-bold text-center">تحضير الطلب</h1>
+        
+        {/* إضافة زر إكمال الطلب في الهيدر للوصول السريع */}
+        {order.items.length > 0 && (
+          <Button 
+            className={`${order.items.every(item => item.is_prepared) ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`} 
+            onClick={() => handleCompleteOrder()}
+            disabled={completingOrder || navigating}
+          >
+            {completingOrder ? (
+              <>
+                <span className="animate-spin h-4 w-4 mr-2 border-2 border-white rounded-full border-t-transparent"></span>
+                جاري الإكمال...
+              </>
+            ) : (
+              <>
+                <FiCheckCircle className="ml-1" />
+                اتمام الطلب
+              </>
+            )}
+          </Button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -494,7 +582,8 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
+          
+          <CardContent className="pt-6">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium">تقدم التحضير:</span>
@@ -529,202 +618,114 @@ export default function PrepareOrderPage({ params }: { params: { id: string } })
         </Card>
         
         {/* قائمة المنتجات للتحضير */}
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>منتجات الطلب ({(isEditMode ? editedItems[order.id] : order.items).length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {(isEditMode ? editedItems[order.id] : order.items).map(item => (
-                  <div key={item.id} className={`p-4 rounded-lg border transition-colors ${isEditMode ? 'bg-blue-50' : item.is_prepared ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      {/* صورة المنتج */}
-                      {item.product?.imageUrl && (
-                        <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
-                          <Image
-                            src={item.product.imageUrl}
-                            alt={item.product_name}
-                            fill
-                            className="object-contain"
-                          />
+        <div className="md:col-span-3">
+          <h2 className="text-xl font-semibold mb-4">قائمة المنتجات للتحضير</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {order.items.map(item => (
+              <Card key={item.id} className={`transition-all ${item.is_prepared ? 'border-green-500 bg-green-50' : ''}`}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* صورة المنتج */}
+                    <div className="relative w-full md:w-32 h-32 bg-gray-100 rounded-md overflow-hidden">
+                      {item.product?.imageUrl ? (
+                        <Image
+                          src={item.product.imageUrl}
+                          alt={item.product_name}
+                          fill
+                          className="object-contain"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                          <FiPackage size={32} />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold text-lg">{item.product_name}</h3>
+                          <p className="text-sm text-gray-500">كود: {item.product_code}</p>
+                        </div>
+                        <div className="bg-gray-100 px-3 py-1 rounded-full">
+                          {item.quantity} قطعة
+                        </div>
+                      </div>
+                      
+                      {/* معلومات السعر */}
+                      <div className="flex justify-between text-sm mb-3">
+                        <span>سعر القطعة: {item.unit_price?.toFixed(2) || '0.00'} جنيه</span>
+                        <span className="font-semibold">الإجمالي: {item.total_price?.toFixed(2) || '0.00'} جنيه</span>
+                      </div>
+                      
+                      {/* ملاحظات المنتج */}
+                      {(item.notes || item.note) && (
+                        <div className="bg-amber-50 p-2 rounded-md border border-amber-100 text-sm mb-3">
+                          <span className="font-medium">ملاحظات: </span>
+                          {item.notes || item.note}
                         </div>
                       )}
                       
-                      {/* تفاصيل المنتج */}
-                      <div className="flex-grow">
-                        <div className="flex justify-between">
-                          <h3 className="font-bold text-lg">{item.product_name}</h3>
-                          {isEditMode ? (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-red-500 transition-colors hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleRemoveItem(item.id)}
-                            >
-                              <FiTrash size={14} className="hover:text-red-700 transition-colors" />
-                            </Button>
-                          ) : (
-                            <div className="flex items-center">
-                              <Checkbox 
-                                id={`item-prepared-${item.id}`}
-                                checked={item.is_prepared}
-                                onCheckedChange={(checked) => 
-                                  handleToggleItemPrepared(item.id, checked === true)
-                                }
-                                className="h-5 w-5"
-                                disabled={isEditMode}
-                              />
-                              <label htmlFor={`item-prepared-${item.id}`} className="mr-2 text-sm font-medium cursor-pointer">
-                                {item.is_prepared ? 'تم التحضير' : 'تحضير'}
-                              </label>
-                            </div>
-                          )}
+                      {/* حالة التحضير */}
+                      <div className="flex justify-end">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">تم التحضير</span>
+                          <Checkbox 
+                            id={`item-prepared-${item.id}`}
+                            checked={item.is_prepared}
+                            onCheckedChange={(checked) => handleToggleItemPrepared(item.id, checked === true)}
+                            className="data-[state=checked]:bg-green-600"
+                          />
                         </div>
-                        
-                        <div className="text-gray-500 text-sm mb-2">كود: {item.product_code}</div>
-                        
-                        <div className="grid grid-cols-2 gap-4 mt-3">
-                          <div>
-                            <span className="text-gray-500 text-sm">الكمية</span>
-                            {isEditMode ? (
-                              <div className="flex items-center mt-1">
-                                <Button 
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => handleChangeQuantity(item.id, -1)}
-                                  className="h-8 w-8"
-                                >
-                                  <FiMinus size={14} />
-                                </Button>
-                                <span className="mx-3 font-bold">{item.quantity}</span>
-                                <Button 
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => handleChangeQuantity(item.id, 1)}
-                                  className="h-8 w-8"
-                                >
-                                  <FiPlus size={14} />
-                                </Button>
-                              </div>
-                            ) : (
-                              <p className="font-bold">{item.quantity}</p>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-gray-500 text-sm">السعر</span>
-                            <p className="font-bold">{item.unit_price} جنيه</p>
-                          </div>
-                        </div>
-                        
-                        {(item.notes || item.note) && !isEditMode && (
-                          <div className="mt-3 p-2 bg-[rgb(227,223,223)] rounded border border-[rgb(207,203,203)]">
-                            <span className="text-gray-700 text-sm font-medium">ملاحظات:</span>
-                            <p className="text-sm">{item.notes || item.note}</p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* ملخص الطلب وأزرار الإجراءات */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>ملخص الطلب</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b">
-                  <span>عدد الأصناف:</span>
-                  <span>{(isEditMode ? editedItems[order.id] : order.items).length}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>الأصناف المحضرة:</span>
-                  <span className="font-medium">{preparedItemsCount}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>الإجمالي:</span>
-                  <span className="font-bold">
-                    {isEditMode 
-                      ? editedItems[order.id].reduce((sum, item) => sum + (item.unit_price * item.quantity), 0).toFixed(2) 
-                      : order.total_amount?.toFixed(2) || 0
-                    } جنيه
-                  </span>
-                </div>
-              </div>
-              
-              {isEditMode ? (
-                <div className="mt-6 flex flex-col gap-3">
-                  <Button 
-                    onClick={handleSaveChanges}
-                    className="w-full bg-green-600 hover:bg-green-700 transition-colors"
-                    disabled={savingOrder}
-                  >
-                    {savingOrder ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        جاري الحفظ...
-                      </span>
-                    ) : (
-                      <>
-                        <FiCheck className="ml-1" />
-                        حفظ التغييرات
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleCancelEdit}
-                    className="w-full border-gray-300 transition-colors hover:bg-gray-100"
-                  >
-                    <FiX className="ml-1" />
-                    إلغاء التعديل
-                  </Button>
-                </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* أزرار أسفل الصفحة */}
+          <div className="mt-8 flex justify-between items-center sticky bottom-0 bg-white p-4 border-t left-0 right-0">
+            <Button 
+              variant="outline" 
+              onClick={handleGoBack}
+              className="flex items-center gap-2"
+              disabled={navigating}
+            >
+              {navigating ? (
+                <>
+                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-gray-500 rounded-full border-t-transparent"></span>
+                  جاري الانتقال...
+                </>
               ) : (
-                <div className="mt-6 flex flex-col gap-3">
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700 transition-colors" 
-                    onClick={handleCompleteOrder}
-                    disabled={completingOrder || isEditMode}
-                  >
-                    {completingOrder ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        جاري إكمال الطلب...
-                      </span>
-                    ) : (
-                      <>
-                        <FiCheckCircle className="ml-2" />
-                        إتمام الطلب
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleEditOrder}
-                    className="w-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                    disabled={isEditMode}
-                  >
-                    <FiEdit className="ml-2" />
-                    تعديل الطلب
-                  </Button>
-                </div>
+                <>
+                  <FiArrowRight />
+                  العودة
+                </>
               )}
-            </CardContent>
-          </Card>
+            </Button>
+            
+            <Button 
+              className={`${order.items.every(item => item.is_prepared) ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} transition-colors`} 
+              onClick={handleCompleteOrder}
+              disabled={completingOrder || navigating}
+              size="lg"
+            >
+              {completingOrder ? (
+                <>
+                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-white rounded-full border-t-transparent"></span>
+                  جاري الإكمال...
+                </>
+              ) : (
+                <>
+                  <FiCheckCircle className="ml-2" />
+                  اتمام الطلب
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

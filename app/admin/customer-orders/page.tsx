@@ -431,10 +431,35 @@ export default function CustomerOrdersPage() {
 
   // Completar un pedido
   const handleCompleteOrder = async (orderId: string) => {
-    // Aquí se implementará la funcionalidad para completar el pedido en el futuro
-    console.log('Order completed:', orderId);
-    // Por ahora solo mostramos un mensaje
-    alert('سيتم تنفيذ هذه الميزة قريبًا');
+    try {
+      if (!confirm('هل أنت متأكد من إكمال هذا الطلب؟ سيتم نقله إلى سجل العملاء.')) {
+        return;
+      }
+      
+      // Actualizar el estado del pedido a "completed"
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: 'completed',
+          in_preparation: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+      
+      if (error) {
+        console.error('Error completing order:', error);
+        alert('حدث خطأ أثناء إكمال الطلب');
+        return;
+      }
+      
+      // Actualizar la lista de pedidos localmente
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      
+      alert('تم إكمال الطلب بنجاح! تم نقله إلى سجل العملاء.');
+    } catch (error) {
+      console.error('Error completing order:', error);
+      alert('حدث خطأ غير متوقع أثناء إكمال الطلب');
+    }
   };
 
   // Activar el modo de edición para un pedido
