@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveData } from '@/lib/localStorage';
 
+// تعريف مفتاح موحد للمصادقة (نفس المفتاح المستخدم في layout.tsx)
+const ADMIN_AUTH_KEY = 'admin_authenticated';
+
 interface AdminLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,10 +30,16 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
       if (username === 'goodmorning' && password === 'shahenda') {
         // إنشاء توكن بسيط
         const token = 'admin_' + Date.now();
+        
         // حفظ التوكن في متصفح المستخدم
         saveData('admin_token', token);
+        
+        // تعيين علامة المصادقة في sessionStorage و localStorage
+        sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+        localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+        
         // توجيه المستخدم إلى لوحة التحكم
-        router.push('/admin/products');
+        window.location.href = '/admin/products';
         onClose();
       } else {
         throw new Error('Invalid credentials');
