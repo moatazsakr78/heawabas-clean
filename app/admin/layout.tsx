@@ -36,6 +36,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'طلبات العملاء', href: '/admin/customer-orders', icon: FiShoppingCart },
     { name: 'المحادثات', href: '/admin/chat', icon: FiMessageCircle },
   ];
+
+  // وظيفة التنقل لضمان عمل الروابط في بيئة الإنتاج
+  const handleNavigation = (href: string) => {
+    setSidebarOpen(false);
+    router.push(href);
+  };
   
   if (!isAuthenticated) {
     return <div className="flex items-center justify-center min-h-screen">جاري التحميل...</div>;
@@ -69,10 +75,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               const isActive = pathname.startsWith(item.href);
               return (
                 <li key={item.name} className="px-6 py-2">
-                  <Link
+                  <a
                     href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center space-x-3 rtl:space-x-reverse ${
+                    onClick={(e) => {
+                      e.preventDefault(); // منع السلوك الافتراضي للرابط
+                      handleNavigation(item.href); // استخدام router للتنقل
+                    }}
+                    className={`flex items-center space-x-3 rtl:space-x-reverse cursor-pointer ${
                       isActive
                         ? 'text-primary font-medium'
                         : 'text-gray-600 hover:text-primary'
@@ -80,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.name}</span>
-                  </Link>
+                  </a>
                 </li>
               );
             })}
