@@ -2,10 +2,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
-import { getCurrentUser, onAuthStateChange, UserProfile, getCurrentUserProfile } from '@/lib/auth';
-
-// تعريف مفتاح موحد للمصادقة (نفس المفتاح المستخدم في layout.tsx)
-const ADMIN_AUTH_KEY = 'admin_authenticated';
+import { getCurrentUser, onAuthStateChange, UserProfile, getCurrentUserProfile, isUserAdmin } from '@/lib/auth';
 
 // تعريف نوع سياق المصادقة
 interface AuthContextType {
@@ -34,14 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
     const checkUser = async () => {
       try {
-        // التحقق من حالة المسؤول من sessionStorage
-        const adminAuthStatus = typeof window !== 'undefined' && 
-          sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
-        
-        if (adminAuthStatus) {
-          setIsAdmin(true);
-        }
-        
         const currentUser = await getCurrentUser();
         setUser(currentUser);
         
@@ -49,17 +38,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const userProfile = await getCurrentUserProfile();
           setProfile(userProfile);
           
-          // إذا كان المستخدم مسؤولًا في قاعدة البيانات، قم بتعيين علامة المصادقة
-          if (userProfile?.is_admin) {
-            setIsAdmin(true);
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-              localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-            }
-          }
+          // تحديد حالة المسؤول فقط من قاعدة البيانات
+          const adminStatus = userProfile?.is_admin || false;
+          setIsAdmin(adminStatus);
+        } else {
+          // إذا لم يكن هناك مستخدم، فهو ليس مسؤولاً
+          setIsAdmin(false);
+          setProfile(null);
         }
       } catch (error) {
         console.error('Error checking auth state:', error);
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }
@@ -75,21 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         getCurrentUserProfile().then(userProfile => {
           setProfile(userProfile);
           
-          // التحقق من حالة المسؤول من sessionStorage أولًا
-          const adminAuthStatus = typeof window !== 'undefined' && 
-            sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
-          
-          if (adminAuthStatus || userProfile?.is_admin) {
-            setIsAdmin(true);
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-              localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-            }
-          } else {
-            setIsAdmin(false);
-          }
+          // تحديد حالة المسؤول فقط من قاعدة البيانات
+          const adminStatus = userProfile?.is_admin || false;
+          setIsAdmin(adminStatus);
         });
       } else {
+        // عندما يسجل المستخدم خروجه، نعيّن قيم افتراضية
         setProfile(null);
         setIsAdmin(false);
       }

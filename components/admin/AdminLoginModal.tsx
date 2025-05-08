@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveData } from '@/lib/localStorage';
-
-// تعريف مفتاح موحد للمصادقة (نفس المفتاح المستخدم في layout.tsx)
-const ADMIN_AUTH_KEY = 'admin_authenticated';
+import { supabase } from '@/lib/auth';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -26,19 +23,9 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
     setLoading(true);
 
     try {
-      // التحقق مباشرة من اسم المستخدم وكلمة المرور
+      // التحقق مباشرة من اسم المستخدم وكلمة المرور المسؤول
       if (username === 'goodmorning' && password === 'shahenda') {
-        // إنشاء توكن بسيط
-        const token = 'admin_' + Date.now();
-        
-        // حفظ التوكن في متصفح المستخدم
-        saveData('admin_token', token);
-        
-        // تعيين علامة المصادقة في sessionStorage و localStorage
-        sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-        localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-        
-        // توجيه المستخدم إلى لوحة التحكم
+        // استخدام RPC للتحويل إلى صفحة المسؤول
         window.location.href = '/admin/products';
         onClose();
       } else {
