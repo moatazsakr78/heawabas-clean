@@ -19,16 +19,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAuthenticated(isAuth);
       
       if (!isAuth) {
-        router.push('/');
+        window.location.href = '/';
       }
     };
     
     checkAuth();
-  }, [router]);
+  }, []);
   
   const handleLogout = () => {
     removeData('admin_token');
-    router.push('/');
+    window.location.href = '/';
   };
   
   const navigation = [
@@ -37,10 +37,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'المحادثات', href: '/admin/chat', icon: FiMessageCircle },
   ];
 
-  // وظيفة التنقل لضمان عمل الروابط في بيئة الإنتاج
-  const handleNavigation = (href: string) => {
+  // وظيفة التنقل المباشر باستخدام window.location
+  const handleDirectNavigation = (href: string) => {
     setSidebarOpen(false);
-    router.push(href);
+    window.location.href = href;
   };
   
   if (!isAuthenticated) {
@@ -72,24 +72,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="mt-5">
           <ul>
             {navigation.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+              const isActive = pathname?.startsWith(item.href);
               return (
                 <li key={item.name} className="px-6 py-2">
-                  <a
-                    href={item.href}
-                    onClick={(e) => {
-                      e.preventDefault(); // منع السلوك الافتراضي للرابط
-                      handleNavigation(item.href); // استخدام router للتنقل
-                    }}
-                    className={`flex items-center space-x-3 rtl:space-x-reverse cursor-pointer ${
+                  <button
+                    onClick={() => handleDirectNavigation(item.href)}
+                    className={`flex items-center w-full text-right space-x-3 rtl:space-x-reverse cursor-pointer ${
                       isActive
                         ? 'text-primary font-medium'
                         : 'text-gray-600 hover:text-primary'
                     }`}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-5 w-5 ml-2" />
                     <span>{item.name}</span>
-                  </a>
+                  </button>
                 </li>
               );
             })}
@@ -98,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={handleLogout}
                 className="flex items-center space-x-3 rtl:space-x-reverse text-[#5D1F1F] hover:text-[#300000]"
               >
-                <FiLogOut size={18} />
+                <FiLogOut size={18} className="ml-2" />
                 <span>تسجيل الخروج</span>
               </button>
             </li>
