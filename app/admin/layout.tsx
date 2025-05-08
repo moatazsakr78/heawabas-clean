@@ -4,22 +4,30 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { FiPackage, FiLogOut, FiMenu, FiX, FiShoppingCart, FiMessageCircle } from 'react-icons/fi';
-import { hasData, removeData } from '@/lib/localStorage';
+import { hasData, removeData, saveData } from '@/lib/localStorage';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginError, setLoginError] = useState('');
   
   useEffect(() => {
     // Check if the user is authenticated
     const checkAuth = () => {
+      // التحقق من وجود توكن المسؤول في التخزين المحلي
       const isAuth = hasData('admin_token');
-      setIsAuthenticated(isAuth);
       
+      // إذا لم يكن موجودًا، عرض نموذج تسجيل الدخول
       if (!isAuth) {
-        window.location.href = '/';
+        setShowLogin(true);
+      } else {
+        setIsAuthenticated(true);
+        setShowLogin(false);
       }
     };
     
@@ -29,6 +37,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = () => {
     removeData('admin_token');
     window.location.href = '/';
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // التحقق من بيانات المسؤول
+    if (username === 'goodmorning' && password === 'shahenda') {
+      // حفظ توكن المصادقة
+      saveData('admin_token', 'admin_' + Date.now());
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      
+      // إعادة تحميل الصفحة الحالية
+      if (pathname) {
+        window.location.href = pathname;
+      } else {
+        window.location.href = '/admin/products';
+      }
+    } else {
+      setLoginError('اسم المستخدم أو كلمة المرور غير صحيحة');
+    }
   };
   
   const navigation = [
@@ -42,6 +71,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setSidebarOpen(false);
     window.location.href = href;
   };
+  
+  // عرض نموذج تسجيل الدخول إذا لم يكن المستخدم مصادقًا
+  if (showLogin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
+          <h1 className="mb-6 text-center text-2xl font-bold">تسجيل دخول المسؤول</h1>
+          
+          {loginError && (
+            <div className="mb-4 rounded-md bg-red-100 p-3 text-red-700">
+              {loginError}
+            </div>
+          )}
+          
+          <form onSubmit={handleLogin}>
+            <div className="mb-4">
+              <label htmlFor="username" className="mb-1 block text-sm font-medium text-gray-700">
+                اسم المستخدم
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                required
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+                كلمة المرور
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full rounded-md bg-[#5D1F1F] px-4 py-2 text-white hover:bg-[#4A1818] focus:bg-[#4A1818] focus:outline-none"
+            >
+              تسجيل الدخول
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <div className="flex items-center justify-center min-h-screen">جاري التحميل...</div>;
