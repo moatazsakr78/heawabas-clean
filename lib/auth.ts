@@ -25,66 +25,135 @@ export interface UserProfile {
 
 // التحقق من وجود اسم المستخدم
 export async function checkUsernameExists(username: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .rpc('check_username_exists', { p_username: username })
-    .single();
-  
-  if (error) {
-    console.error('Error checking username:', error);
+  try {
+    const { data, error } = await supabase
+      .rpc('check_username_exists', { p_username: username })
+      .single();
+    
+    if (error) {
+      console.error('Error checking username:', error.message);
+      return false;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error('Exception checking username:', error);
     return false;
   }
-  
-  return !!data;
 }
 
 // تسجيل مستخدم جديد
 export async function signUp(email: string, password: string, username: string) {
-  // التحقق من وجود اسم المستخدم أولاً
-  const usernameExists = await checkUsernameExists(username);
-  if (usernameExists) {
+  try {
+    console.log('Starting signup process for:', email, 'with username:', username);
+
+    // التحقق من وجود اسم المستخدم أولاً (باستخدام استعلام مباشر)
+    console.log('Checking if username exists');
+    
+    const { data: existingUsers, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .limit(1);
+
+    if (userError) {
+      console.error('Error checking existing users:', userError);
+      return { 
+        data: null, 
+        error: { 
+          message: 'حدث خطأ أثناء التحقق من اسم المستخدم'
+        } 
+      };
+    }
+    
+    if (existingUsers && existingUsers.length > 0) {
+      console.log('Username already exists');
+      return { 
+        data: null, 
+        error: { 
+          message: 'اسم المستخدم مستخدم بالفعل، يرجى اختيار اسم آخر'
+        } 
+      };
+    }
+
+    console.log('Proceeding with signup for', email);
+    
+    // تسجيل المستخدم باستخدام Supabase Auth API
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username // تخزين اسم المستخدم في البيانات الوصفية
+        }
+      }
+    });
+    
+    console.log('Auth signup response:', data ? 'Success' : 'Failed', error ? `Error: ${error.message}` : 'No error');
+    
+    if (error) {
+      console.error('Signup error:', error);
+      return { data, error };
+    }
+    
+    // التحقق من أن المستخدم تم إنشاؤه بنجاح
+    if (!data?.user?.id) {
+      console.error('No user ID returned from signup');
+      return { 
+        data: null, 
+        error: { 
+          message: 'فشل إنشاء المستخدم: لم يتم إرجاع معرف المستخدم'
+        } 
+      };
+    }
+
+    // التحقق من أن سجل المستخدم تم إنشاؤه في جدول users
+    // إعطاء وقت للـ trigger ليعمل (1 ثانية)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const { data: userRecord, error: userRecordError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+    
+    if (userRecordError || !userRecord) {
+      console.log('User record not created automatically, creating manually');
+      
+      // إنشاء سجل المستخدم يدويًا إذا لم يتم إنشاؤه بواسطة الـ trigger
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: data.user.id,
+          email: email,
+          username: username,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_admin: false
+        });
+      
+      if (insertError) {
+        console.error('Error creating user record manually:', insertError);
+        return {
+          data,
+          error: {
+            message: 'تم إنشاء حساب المستخدم ولكن فشل في إنشاء الملف الشخصي. الرجاء تسجيل الدخول والمحاولة مرة أخرى.'
+          }
+        };
+      }
+    }
+    
+    console.log('Signup completed successfully');
+    return { data, error: null };
+  } catch (err) {
+    console.error('Unexpected error in signUp function:', err);
     return { 
       data: null, 
       error: { 
-        message: 'اسم المستخدم مستخدم بالفعل، يرجى اختيار اسم آخر'
-      } 
+        message: 'حدث خطأ غير متوقع أثناء التسجيل: ' + (err instanceof Error ? err.message : String(err))
+      }
     };
   }
-
-  // تسجيل المستخدم مع إلغاء التأكيد عبر البريد الإلكتروني
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      // إلغاء إرسال رسالة التأكيد
-      emailRedirectTo: undefined,
-      // تلقائياً اعتبار البريد الإلكتروني مؤكد
-      data: {
-        // إضافة اسم المستخدم في بيانات المستخدم
-        username: username
-      }
-    }
-  });
-  
-  if (error) return { data, error };
-  
-  // تحديث الـ username في جدول المستخدمين 
-  if (data.user) {
-    const { error: profileError } = await supabase
-      .from('users')
-      .update({ username: username })
-      .eq('id', data.user.id);
-    
-    if (profileError) {
-      console.error('Error updating username:', profileError);
-    }
-    
-    // تسجيل الدخول مباشرة بعد التسجيل لتفعيل الحساب
-    await supabase.auth.updateUser({
-      data: { email_confirmed: true }
-    });
-  }
-  
-  return { data, error };
 }
 
 // تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور

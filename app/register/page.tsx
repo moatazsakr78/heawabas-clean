@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUp } from '@/lib/auth';
+import { supabase } from '@/lib/auth'; // استيراد عميل supabase لتسجيل الدخول
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -52,28 +52,67 @@ export default function Register() {
     setLoading(true);
     
     try {
-      const { data, error } = await signUp(email, password, username);
+      console.log('Attempting to sign up with:', {
+        email,
+        username,
+        passwordLength: password.length
+      });
+
+      // استخدام الدالة الطرفية الجديدة بدلاً من وظيفة signUp
+      const response = await fetch('https://jpwsohttsxsmyhasvudy.supabase.co/functions/v1/register-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          username,
+        }),
+      });
+
+      const result = await response.json();
       
-      if (error) {
-        if (error.message.includes('email already')) {
-          setError('البريد الإلكتروني مستخدم بالفعل');
-        } else {
-          setError(error.message);
-        }
+      console.log('Registration result:', result);
+      
+      if (!response.ok) {
+        // فشل التسجيل
+        setError(result.error || 'حدث خطأ أثناء التسجيل');
         return;
       }
       
-      // تم التسجيل بنجاح
-      setMessage('تم التسجيل بنجاح! جاري تحويلك للصفحة الرئيسية...');
+      // تسجيل الدخول تلقائياً بعد إنشاء الحساب بنجاح
+      setMessage('تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...');
       
-      // إعادة التوجيه إلى الصفحة الرئيسية بعد 3 ثوان
+      // استخدام signInWithPassword لتسجيل الدخول مباشرة
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) {
+        console.error('Error signing in automatically:', signInError);
+        setMessage('تم إنشاء الحساب بنجاح، ولكن فشل تسجيل الدخول التلقائي. يرجى تسجيل الدخول يدوياً.');
+        
+        // توجيه المستخدم إلى صفحة تسجيل الدخول بعد 3 ثوان
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
+        return;
+      }
+      
+      // نجح تسجيل الدخول
+      console.log('Automatic sign in successful:', signInData);
+      setMessage('تم إنشاء الحساب وتسجيل الدخول بنجاح! جاري تحويلك...');
+      
+      // إعادة التوجيه إلى الصفحة الرئيسية بعد ثانية واحدة
       setTimeout(() => {
         router.push('/');
-      }, 3000);
-      
+      }, 1000);
     } catch (err) {
+      console.error('Registration error details:', err);
       setError('حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
-      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
