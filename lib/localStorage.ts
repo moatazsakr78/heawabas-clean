@@ -192,4 +192,4 @@ async function removeFromIndexedDB(key: string): Promise<void> {
   } catch (error) {
     console.error('خطأ في حذف البيانات من IndexedDB:', error);
   }
-} 
+}
