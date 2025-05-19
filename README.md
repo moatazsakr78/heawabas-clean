@@ -1,46 +1,34 @@
-# HeaWaBas Project
+# HeaWaBas - Arabic E-commerce Catalog
 
-## Overview
-HeaWaBas is a Next.js application with Supabase backend integration.
+A Next.js application for an Arabic e-commerce catalog featuring admin functionality for product management.
 
 ## Features
-- Product catalog management
-- User authentication
-- Order processing
-- Profile management
+
+- Product display with price details
+- Admin interface for product management
+- Responsive design for mobile and desktop
+- Arabic language support
+
+## Technologies Used
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Local storage for data persistence
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 16.x or higher
-- npm or yarn
-
-### Installation
 1. Clone the repository
-2. Install dependencies:
-```bash
-npm install
-```
+2. Install dependencies with \
+pm install\`r
+3. Run the development server with \
+pm run dev\`r
+4. Access the admin page with username 'goodmorning' and password 'shahenda'
 
-### Development
-Run the development server:
-```bash
-npm run dev
-```
+## Deployment
 
-### Building for Production
-Build the application:
-```bash
-npm run build
-```
-
-Start the production server:
-```bash
-npm start
-```
-
-## Documentation
-Additional documentation is available in the `docs` directory.
+This site is deployed on GitHub Pages.
 
 ## تحديث اختباري
 تم التحديث في: 05-05-2024
