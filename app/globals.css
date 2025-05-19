@@ -12,22 +12,3 @@ body {
   background: rgb(var(--background-rgb));
   min-height: 100vh;
 }
-
-.main-admin-chat-container {
-  width: 100%;
-  overflow: hidden;
-}
-
-.custom-admin-chat-box ::-webkit-scrollbar {
-  width: 6px;
-  background: transparent;
-  transition: opacity 0.5s;
-  opacity: 0;
-}
-.custom-admin-chat-box.show-scrollbar ::-webkit-scrollbar {
-  opacity: 1;
-}
-.custom-admin-chat-box ::-webkit-scrollbar-thumb {
-  background: #5D1F1F;
-  border-radius: 6px;
-} 
