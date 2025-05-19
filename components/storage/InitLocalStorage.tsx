@@ -58,4 +58,4 @@ export default function InitLocalStorage() {
 
   // هذا المكون لا يعرض أي محتوى مرئي
   return null;
-} 
+}
