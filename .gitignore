@@ -1,6 +1,5 @@
 # dependencies
 /node_modules
-/HeaWaBas/node_modules
 /.pnp
 .pnp.js
 
@@ -9,12 +8,10 @@
 
 # next.js
 /.next/
-/HeaWaBas/.next/
 /out/
 
 # production
 /build
-/HeaWaBas/build
 
 # misc
 .DS_Store
@@ -35,6 +32,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Supabase
-.supabase-backup 
