@@ -23,4 +23,4 @@ export default function ServiceWorkerRegistration() {
 
   // هذا المكون لا يعرض أي عناصر واجهة مستخدم
   return null;
-} 
+}
