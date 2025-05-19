@@ -19,16 +19,8 @@ const nextConfig = {
       '*': ['./supabase/**/*']
     },
   },
-  typescript: {
-    // ⚠️ Warning: Ignoring TypeScript errors during build
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    // ⚠️ Warning: Ignoring ESLint errors during build
-    ignoreDuringBuilds: true,
-  },
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com', 'jpwsohttsxsmyhasvudy.supabase.co'],
+    domains: ['images.unsplash.com', 'via.placeholder.com', 'ywhdengahgtadawgjmjs.supabase.co'],
     remotePatterns: [
       {
         protocol: 'https',
