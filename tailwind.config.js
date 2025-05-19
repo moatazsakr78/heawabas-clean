@@ -8,12 +8,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#5D1F1F',
-        'primary-dark': '#300000',
+        primary: '#901b15',
+        'primary-dark': '#701510',
         secondary: '#10b981',
         dark: '#1f2937',
       },
     },
   },
   plugins: [],
-}; 
+};
